@@ -1,0 +1,32 @@
+<!doctype html>
+<!--
+Copyright 2018 The Go Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Happycode</title>
+
+  <link href="/static/css/reset.css" rel="stylesheet">
+  <link href="/static/css/main.css" rel="stylesheet">
+</head>
+
+<body>
+  <div id="world"></div>
+
+  <script src="/static/wasm/wasm_exec.js"></script>
+  <script>
+    const go = new Go();
+    WebAssembly.instantiateStreaming(fetch("/static/wasm/main.wasm"), go.importObject).then((result) => {
+      go.run(result.instance);
+    }).catch((err) => {
+      console.error(err);
+    });
+
+  </script>
+</body>
+
+</html>
