@@ -81,11 +81,6 @@ func (m *Logging) stdLogging(code int, r *http.Request, elapsed time.Duration) {
 }
 
 func (m *Logging) console(code int, r *http.Request, elapsed time.Duration) {
-	/*
-		if strings.HasPrefix(r.URL.Path, "/static") {
-			return
-		}
-	*/
 	msg := fmt.Sprintf("|%3d| %-4s %-40s %.3f", code, r.Method, r.URL.String(), elapsed.Seconds())
 	if code >= 400 {
 		m.sugar.Warn(msg)

@@ -30,6 +30,7 @@ func Run(ctx context.Context, _ *cli.Command, _ []string) {
 	go watchSignal(cancel)
 
 	app := di.NewAppStack(loadConfig())
+	app.PayloadManager.Run()
 	app.Server.Run(ctx)
 }
 
@@ -48,6 +49,11 @@ func loadConfig() *config.Config {
 			logger.Fatal("failed to create config file")
 		}
 		cfg.Meta.FilePath = path
+	} else if err != nil {
+		log.Fatal("load config", zap.Error(err))
+	} else {
+		log.V(0).Debug("load config", zap.String("path", path))
+		log.V(5).Debug("dump config", zap.Any("content", cfg))
 	}
 	return cfg
 }

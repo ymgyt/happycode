@@ -5,16 +5,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ymgyt/happycode/backend/log"
 	"github.com/ymgyt/happycode/core/config"
 	"github.com/ymgyt/happycode/core/errors"
 	"github.com/ymgyt/happycode/core/errors/errcode"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )
 
 func LoadConfig(path string) (*config.Config, error) {
-	log.V(0).Debug("load config", zap.String("path", path))
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {

@@ -1,51 +1,57 @@
 package frontend
 
 import (
-	"fmt"
-
+	"github.com/ymgyt/happycode/core/payload"
 	"github.com/ymgyt/happycode/frontend/js"
+	"github.com/ymgyt/happycode/frontend/log"
 	"github.com/ymgyt/happycode/frontend/service"
+	"go.uber.org/zap"
 )
 
 type App struct {
-	d     *js.Element
-	world *js.Element
+	Document *js.Element
+	World    *js.Element
 
-	backendClient *service.BackendClient
-	ws            *js.WebSocket
-}
-
-func NewApp() *App {
-	d := js.NewDocument()
-	world, err := d.GetElementByID("world")
-	if err != nil {
-		panic(err)
-	}
-	backendURL := js.BackendURL()
-	client := service.NewBackendClient(backendURL)
-
-	webSocketPort := client.GetWebSocketPort()
-	webSocketEndpoint := fmt.Sprintf("ws://%s:%d", backendURL.Hostname(), webSocketPort)
-	ws := js.NewWebSocket(webSocketEndpoint)
-
-	app := &App{
-		d:             d,
-		world:         world,
-		backendClient: client,
-		ws:            ws,
-	}
-	return app
+	BackendClient *service.BackendClient
+	WebSocket     *js.WebSocket
 }
 
 func (app *App) Init() {
-	s := app.world.Style()
-
+	s := app.World.Style()
 	s.SetWidth("100%")
 	s.SetHeight("100%")
 	s.SetBackgroundColor("#07280e")
-	//s.SetBackgroundColor("#eeeeee")
 
-	app.ws.Init()
+	app.WebSocket.Init()
+	go app.HandlePayload()
+}
 
+func (app *App) Run() {
+	log.V(10).Debug("initialize app")
+	app.Init()
+	log.V(10).Debug("running app")
 	select {}
 }
+
+func (app *App) HandlePayload() {
+	for pl := range app.WebSocket.IncommingPayload {
+		typ := pl.Type()
+		log.V(0).Debug("receive payload", zap.String("type", typ.String()))
+
+		switch typ {
+		case payload.TypeHello:
+			app.HandleHello(pl)
+		default:
+			panic("unexpected payload type " + typ.String())
+		}
+	}
+}
+
+func (app *App) HandleHello(pl payload.Interface) {
+	hello, ok := pl.(payload.Hello)
+	if !ok {
+		panic("payload is not hello type")
+	}
+	log.V(0).Info("handle hello payload", zap.String("message", hello.Message))
+}
+

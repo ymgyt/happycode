@@ -26,6 +26,15 @@ const (
 	defaultWebSocketPort            = 50505
 	defaultWebSocketReadBufferSize  = 4096
 	defaultWebSocketWriteBufferSize = 4096
+
+	// theme
+	defaultThemeBackgroundColor = "#07280e"
+)
+
+const (
+	// payload manager
+	PayloadManagerIncommingChanBuffSize = 100
+	PayloadManagerOutgoingChanBuffSize  = 100
 )
 
 var (
@@ -34,10 +43,7 @@ var (
 )
 
 func Default() *Config {
-	cfg := &Config{
-		Meta:   &Meta{},
-		Server: &Server{},
-	}
+	cfg := &Config{}
 	cfg.SetDefault()
 	return cfg
 }
@@ -45,6 +51,7 @@ func Default() *Config {
 type Config struct {
 	Meta   *Meta `yaml:"-"`
 	Server *Server
+	Theme  *Theme
 }
 
 type Meta struct {
@@ -71,6 +78,10 @@ type WebSocket struct {
 	WriteBufferSize int
 }
 
+type Theme struct {
+	BackgroundColor string
+}
+
 func NewFromYAML(b []byte, path string) (*Config, error) {
 	var cfg Config
 	err := yaml.Unmarshal(b, &cfg)
@@ -78,12 +89,25 @@ func NewFromYAML(b []byte, path string) (*Config, error) {
 		return nil, err
 	}
 	cfg.Meta = &Meta{FilePath: path}
+	cfg.SetDefault()
 	return &cfg, nil
 }
 
 func (c *Config) SetDefault() {
+	if c.Meta == nil {
+		c.Meta = &Meta{}
+	}
 	c.Meta.SetDefault()
+
+	if c.Server == nil {
+		c.Server = &Server{}
+	}
 	c.Server.SetDefault()
+
+	if c.Theme == nil {
+		c.Theme = &Theme{}
+	}
+	c.Theme.SetDefault()
 }
 
 func (c *Config) FilePermission() os.FileMode { return os.FileMode(configFilePermission) }
@@ -135,6 +159,12 @@ func (w *WebSocket) SetDefault() {
 	}
 	if w.WriteBufferSize == 0 {
 		w.WriteBufferSize = defaultWebSocketWriteBufferSize
+	}
+}
+
+func (t *Theme) SetDefault() {
+	if t.BackgroundColor == "" {
+		t.BackgroundColor = defaultThemeBackgroundColor
 	}
 }
 

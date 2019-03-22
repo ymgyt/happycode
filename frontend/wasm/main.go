@@ -1,17 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"go.uber.org/zap"
 
-	"github.com/ymgyt/happycode/frontend"
+	"github.com/ymgyt/happycode/core"
+	"github.com/ymgyt/happycode/frontend/di"
+	"github.com/ymgyt/happycode/frontend/log"
 )
 
 func main() {
-	fmt.Println("start app")
-
-	app := frontend.NewApp()
-	app.Init()
-	fmt.Println("init app")
-
-	select {}
+	log.V(0).Info("start app", zap.String("version", core.Version))
+	di.NewApp().Run()
 }

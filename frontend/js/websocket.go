@@ -1,10 +1,11 @@
 package js
 
 import (
-	"fmt"
 	"syscall/js"
 
 	"github.com/ymgyt/happycode/core/payload"
+	"github.com/ymgyt/happycode/frontend/log"
+	"go.uber.org/zap"
 )
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/readyState
@@ -35,7 +36,9 @@ func (s WebSocketState) String() string {
 }
 
 type WebSocket struct {
-	ws js.Value
+	ws               js.Value
+	IncommingPayload chan payload.Interface
+	OutgoingPayload  chan payload.Interface
 }
 
 func NewWebSocket(endpoint string) *WebSocket {
@@ -47,15 +50,61 @@ func NewWebSocket(endpoint string) *WebSocket {
 }
 
 func (ws *WebSocket) Init() {
+	ws.initOnMessage() // listen on message before send hello.
+	ws.initOnOpen()
+	ws.initOnError()
+	ws.initOnClose()
+	go ws.write()
+}
+
+func (ws *WebSocket) initOnOpen() {
 	var cb js.Func
 	cb = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-		fmt.Println(fmt.Sprintf("%s: %s", ws.State(), ws.URL()))
+		log.V(0).Debug("connect websocket", zap.String("state", ws.State().String()), zap.String("endpoint", ws.URL()))
 		hello := payload.Hello{Message: "hello server !"}
-		ws.ws.Call("send", js.TypedArrayOf(payload.Encode(hello)))
+		ws.Send(hello)
 		cb.Release()
 		return nil
 	})
 	ws.ws.Call("addEventListener", "open", cb)
+}
+
+func (ws *WebSocket) initOnMessage() {
+	ws.ws.Call("addEventListener", "message", js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		messageEvent := args[0]
+		data := messageEvent.Get("data")
+		pl := payload.DecodeBase64(data.String())
+		ws.IncommingPayload <- pl
+		return nil
+	}))
+}
+
+func (ws *WebSocket) initOnError() {
+	ws.ws.Call("addEventListener", "error", js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		err := args[0]
+		log.V(0).Error("receive websocket error", zap.String("event", err.String()))
+		return nil
+	}))
+}
+
+func (ws *WebSocket) initOnClose() {
+	ws.ws.Call("addEventListener", "close", js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		event := args[0]
+		log.V(0).Warn("receive websocket close event", zap.String("event", event.String()))
+		return nil
+	}))
+}
+
+func (ws *WebSocket) Send(pl payload.Interface) {
+	ws.OutgoingPayload <- pl
+}
+
+func (ws *WebSocket) write() {
+	for pl := range ws.OutgoingPayload {
+		b := js.TypedArrayOf(payload.Encode(pl))
+		ws.ws.Call("send", b)
+		b.Release()
+	}
 }
 
 func (ws *WebSocket) Close() {

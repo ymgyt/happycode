@@ -2,6 +2,7 @@ package payload
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/gob"
 )
 
@@ -40,4 +41,26 @@ func Encode(p Interface) []byte {
 		panic(err)
 	}
 	return buff.Bytes()
+}
+
+func Decode(b []byte) Interface {
+	var p Interface
+	err := gob.NewDecoder(bytes.NewReader(b)).Decode(&p)
+	if err != nil {
+		panic(err)
+	}
+	return p
+}
+
+func EncodeBase64(p Interface) string {
+	b := Encode(p)
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+func DecodeBase64(s string) Interface {
+	b, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		panic(err)
+	}
+	return Decode(b)
 }
