@@ -54,12 +54,12 @@ func (ws *WebSocket) Init() {
 	ws.initOnOpen()
 	ws.initOnError()
 	ws.initOnClose()
-	go ws.write()
 }
 
 func (ws *WebSocket) initOnOpen() {
 	var cb js.Func
 	cb = js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+		go ws.write() // delay writing until connection established.
 		log.V(0).Debug("connect websocket", zap.String("state", ws.State().String()), zap.String("endpoint", ws.URL()))
 		hello := payload.Hello{Message: "hello server !"}
 		ws.Send(hello)

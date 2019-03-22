@@ -51,7 +51,10 @@ func (b *Builder) buildPayloadManager() *Builder {
 		Out: make(chan payload.Interface, config.PayloadManagerOutgoingChanBuffSize),
 	}
 	hello := &handlers.Hello{Outgoing: pm.Out}
+	cfg := &handlers.Config{Outgoing: pm.Out, Config: b.cfg}
+
 	pm.Register(payload.TypeHello, hello.HandleHello)
+	pm.Register(payload.TypeConfigRequest, cfg.HandleConfig)
 
 	b.payloadManager = pm
 	return b
@@ -77,7 +80,10 @@ func (b *Builder) buildRouter() *Builder {
 	r := backend.NewRouter()
 	staticDir := b.cfg.Server.StaticDir()
 	staticHdler := handlers.NewStatic(staticDir, "/"+filepath.Base(staticDir))
-	configHdler := handlers.NewConfig(b.cfg)
+	configHdler := &handlers.Config{
+		Config:   b.cfg,
+		Outgoing: b.payloadManager.Out,
+	}
 
 	r.GET("/", staticHdler.ServeHTTP)
 	r.GET("/favicon.ico", staticHdler.ServeHTTP)

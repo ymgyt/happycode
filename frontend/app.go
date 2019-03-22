@@ -1,29 +1,26 @@
 package frontend
 
 import (
+	"fmt"
+
+	"go.uber.org/zap"
+
+	"github.com/ymgyt/happycode/core/config"
 	"github.com/ymgyt/happycode/core/payload"
 	"github.com/ymgyt/happycode/frontend/js"
 	"github.com/ymgyt/happycode/frontend/log"
 	"github.com/ymgyt/happycode/frontend/service"
-	"go.uber.org/zap"
+	"github.com/ymgyt/happycode/frontend/ui"
 )
 
 type App struct {
-	Document *js.Element
-	World    *js.Element
+	// Document *js.Element
+	// World    *js.Element
+	UI *ui.UI
 
 	BackendClient *service.BackendClient
 	WebSocket     *js.WebSocket
-}
-
-func (app *App) Init() {
-	s := app.World.Style()
-	s.SetWidth("100%")
-	s.SetHeight("100%")
-	s.SetBackgroundColor("#07280e")
-
-	app.WebSocket.Init()
-	go app.HandlePayload()
+	Config        *config.Config
 }
 
 func (app *App) Run() {
@@ -31,6 +28,17 @@ func (app *App) Run() {
 	app.Init()
 	log.V(10).Debug("running app")
 	select {}
+}
+
+func (app *App) Init() {
+	app.WebSocket.Init()
+	go app.HandlePayload()
+
+	app.LoadConfig()
+}
+
+func (app *App) LoadConfig() {
+	app.WebSocket.Send(payload.ConfigRequest{})
 }
 
 func (app *App) HandlePayload() {
@@ -41,6 +49,8 @@ func (app *App) HandlePayload() {
 		switch typ {
 		case payload.TypeHello:
 			app.HandleHello(pl)
+		case payload.TypeConfigResponse:
+			app.HandleConfigResponse(pl)
 		default:
 			panic("unexpected payload type " + typ.String())
 		}
@@ -53,5 +63,16 @@ func (app *App) HandleHello(pl payload.Interface) {
 		panic("payload is not hello type")
 	}
 	log.V(0).Info("handle hello payload", zap.String("message", hello.Message))
+}
+
+func (app *App) HandleConfigResponse(pl payload.Interface) {
+	cfgResp, ok := pl.(payload.ConfigResponse)
+	if !ok {
+		panic(fmt.Errorf("invalid payload type, got %s, want %s", pl.Type(), payload.TypeConfigResponse))
+	}
+	// Note: should i care concurrency ?
+	app.Config = &cfgResp.Config
+	log.V(0).Info("load config")
+	app.UI.ApplyTheme(app.Config.Theme)
 }
 

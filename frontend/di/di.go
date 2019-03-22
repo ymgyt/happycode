@@ -7,14 +7,10 @@ import (
 	"github.com/ymgyt/happycode/frontend"
 	"github.com/ymgyt/happycode/frontend/js"
 	"github.com/ymgyt/happycode/frontend/service"
+	"github.com/ymgyt/happycode/frontend/ui"
 )
 
 func NewApp() *frontend.App {
-	d := js.NewDocument()
-	world, err := d.GetElementByID("world")
-	if err != nil {
-		panic(err)
-	}
 	backendURL := js.BackendURL()
 	client := service.NewBackendClient(backendURL)
 
@@ -26,10 +22,21 @@ func NewApp() *frontend.App {
 	ws.OutgoingPayload = make(chan payload.Interface, 100)
 
 	app := &frontend.App{
-		Document:      d,
-		World:         world,
+		UI:            NewUI(),
 		BackendClient: client,
 		WebSocket:     ws,
 	}
 	return app
+}
+
+func NewUI() *ui.UI {
+	d := js.NewDocument()
+	world, err := d.GetElementByID("world")
+	if err != nil {
+		panic(err)
+	}
+	return &ui.UI{
+		Document: d,
+		World:    world,
+	}
 }

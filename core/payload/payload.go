@@ -4,24 +4,34 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/gob"
+
+	"github.com/ymgyt/happycode/core/config"
 )
 
 func init() {
 	gob.Register(Hello{})
+	gob.Register(ConfigRequest{})
+	gob.Register(ConfigResponse{})
 }
 
 type Type int
 
 const (
 	TypeHello Type = iota
+	TypeConfigRequest
+	TypeConfigResponse
 )
 
 func (t Type) String() string {
 	switch t {
 	case TypeHello:
-		return "hello"
+		return "Hello"
+	case TypeConfigRequest:
+		return "ConfigRequest"
+	case TypeConfigResponse:
+		return "ConfigResponse"
 	}
-	return "undefined"
+	return "Undefined"
 }
 
 type Interface interface {
@@ -33,6 +43,16 @@ type Hello struct {
 }
 
 func (h Hello) Type() Type { return TypeHello }
+
+type ConfigRequest struct{}
+
+func (r ConfigRequest) Type() Type { return TypeConfigRequest }
+
+type ConfigResponse struct {
+	Config config.Config
+}
+
+func (r ConfigResponse) Type() Type { return TypeConfigResponse }
 
 func Encode(p Interface) []byte {
 	buff := new(bytes.Buffer)
