@@ -21,11 +21,25 @@ func (e *Element) GetElementByID(id string) (*Element, error) {
 	return NewElement(element), nil
 }
 
-func (e *Element) AddEventListener(et EventType, cb js.Func) {
-	e.e.Call("addEventListener", et.String(), cb)
+func (e *Element) AddEventHandler(et EventType, h EventHandler) {
+	e.e.Call("addEventListener", et.String(), h.jsFunc())
+	// cb := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
+	// 	fmt.Println("row addlistener", args)
+	// 	return nil
+	// })
+	// e.e.Call("addEventListener", "keydown", cb)
 }
 
 func (e *Element) Style() *Style {
 	return &Style{s: e.e.Get("style")}
 }
 
+func (e *Element) CreateElement(tag string) *Element {
+	created := e.e.Call("createElement", tag)
+	return &Element{e: created}
+}
+
+func (e *Element) AppendChild(child *Element) {
+	assertType(child.e, TypeObject)
+	e.e.Call("appendChild", child.e)
+}

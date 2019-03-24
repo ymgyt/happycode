@@ -2,18 +2,24 @@
 
 package main
 
-import "github.com/magefile/mage/sh"
+import (
+	"os"
+
+	"github.com/magefile/mage/sh"
+)
 
 // var Aliases = map[string]interface{}{}
 
 func All() {
-	Wasm()
+	if err := Wasm(); err != nil {
+		os.Exit(sh.ExitStatus(err))
+	}
 	Run()
 }
 
 // Wasm build webassembly.
-func Wasm() {
-	sh.RunWith(map[string]string{
+func Wasm() error {
+	return sh.RunWith(map[string]string{
 		"GOOS":   "js",
 		"GOARCH": "wasm",
 	}, "go", "build", "-o", "static/wasm/main.wasm", "frontend/wasm/main.go")

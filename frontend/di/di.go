@@ -36,7 +36,8 @@ func NewUI() *ui.UI {
 		panic(err)
 	}
 	return &ui.UI{
-		Document: d,
-		World:    world,
+		Document:       d,
+		World:          world,
+		KeyboardEvents: make(chan js.KeyboardEvent, 100),
 	}
 }

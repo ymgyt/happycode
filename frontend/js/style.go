@@ -18,6 +18,10 @@ func (s *Style) SetBackgroundColor(v string) {
 	s.setAttribute("background-color", v)
 }
 
+func (s *Style) SetBorder(v string) {
+	s.setAttribute("border", v)
+}
+
 func (s *Style) setAttribute(property string, v interface{}) {
 	s.s.Set(property, v)
 }

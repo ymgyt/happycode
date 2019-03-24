@@ -5,6 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/ymgyt/happycode/core/config"
 	"github.com/ymgyt/happycode/core/payload"
 	"github.com/ymgyt/happycode/frontend/js"
@@ -33,12 +34,19 @@ func (app *App) Run() {
 func (app *App) Init() {
 	app.WebSocket.Init()
 	go app.HandlePayload()
+	go app.HandleKeyboardEvent()
 
 	app.LoadConfig()
 }
 
 func (app *App) LoadConfig() {
 	app.WebSocket.Send(payload.ConfigRequest{})
+}
+
+func (app *App) HandleKeyboardEvent() {
+	for ke := range app.UI.KeyboardEvents {
+		spew.Dump(ke)
+	}
 }
 
 func (app *App) HandlePayload() {
@@ -73,6 +81,6 @@ func (app *App) HandleConfigResponse(pl payload.Interface) {
 	// Note: should i care concurrency ?
 	app.Config = &cfgResp.Config
 	log.V(0).Info("load config")
-	app.UI.ApplyTheme(app.Config.Theme)
+	app.UI.Init(app.Config)
 }
 
