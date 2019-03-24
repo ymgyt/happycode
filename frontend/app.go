@@ -5,7 +5,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ymgyt/happycode/core/config"
 	"github.com/ymgyt/happycode/core/payload"
 	"github.com/ymgyt/happycode/frontend/js"
@@ -45,7 +44,7 @@ func (app *App) LoadConfig() {
 
 func (app *App) HandleKeyboardEvent() {
 	for ke := range app.UI.KeyboardEvents {
-		spew.Dump(ke)
+		app.UI.ActionEvents <- ke
 	}
 }
 

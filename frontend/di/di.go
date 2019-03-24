@@ -39,5 +39,6 @@ func NewUI() *ui.UI {
 		Document:       d,
 		World:          world,
 		KeyboardEvents: make(chan js.KeyboardEvent, 100),
+		ActionEvents:   make(chan js.KeyboardEvent, 100),
 	}
 }

@@ -1,6 +1,7 @@
 package js
 
 import (
+	"fmt"
 	"syscall/js"
 )
 
@@ -23,15 +24,18 @@ func (e *Element) GetElementByID(id string) (*Element, error) {
 
 func (e *Element) AddEventHandler(et EventType, h EventHandler) {
 	e.e.Call("addEventListener", et.String(), h.jsFunc())
-	// cb := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
-	// 	fmt.Println("row addlistener", args)
-	// 	return nil
-	// })
-	// e.e.Call("addEventListener", "keydown", cb)
 }
 
 func (e *Element) Style() *Style {
 	return &Style{s: e.e.Get("style")}
+}
+
+func (e *Element) AppendText(s string) {
+	org := e.e.Get("textContent").String()
+	fmt.Println("org", org)
+
+	innerText := org + s
+	e.e.Set("textContent", innerText)
 }
 
 func (e *Element) CreateElement(tag string) *Element {

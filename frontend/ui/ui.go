@@ -10,6 +10,8 @@ type UI struct {
 	World          *js.Element
 	KeyboardEvents chan js.KeyboardEvent
 
+	ActionEvents chan js.KeyboardEvent
+
 	windows map[string]*Window
 	theme   *config.Theme
 }
@@ -18,6 +20,7 @@ func (ui *UI) Init(cfg *config.Config) {
 	ui.theme = cfg.Theme
 	ui.InitWindow()
 	ui.InitEventListener()
+	go ui.HandleAction()
 }
 
 func (ui *UI) InitWindow() {
@@ -30,9 +33,11 @@ func (ui *UI) InitWindow() {
 
 	w1 := ui.newMainWindow()
 	ui.World.AppendChild(w1.Element)
+	ui.windows["main"] = w1
 
 	debugw := ui.newDebugWindow()
 	ui.World.AppendChild(debugw.Element)
+	ui.windows["debug"] = debugw
 }
 
 func (ui *UI) newMainWindow() *Window {
@@ -67,4 +72,11 @@ func (ui *UI) InitEventListener() {
 	ui.Document.AddEventHandler(js.KeyPressEvent, func(event js.Event) {
 		ui.KeyboardEvents <- event.ToKeyboard()
 	})
+}
+
+func (ui *UI) HandleAction() {
+	w := ui.windows["main"]
+	for ke := range ui.ActionEvents {
+		w.Element.AppendText(ke.Key)
+	}
 }
